@@ -8,12 +8,16 @@ a collection of utilities to simplify git usage
 2. Include this file in your global .gitconfig file:
 
 ```gitconfig
-  [include]
-      path = PATH/TO/.git_tools/.gitconfig
+# ~/.gitconfig
+
+[include]
+    path = PATH/TO/.git_tools/.gitconfig
 ```
 
 or run the following commands to automatically add the git-tools:
-```bash
+```sh
+#!/bin/sh
+
 export GIT_TOOLS_PATH=#PATH/TO/.git_tools/.gitconfig
 GIT_CONFIG="$HOME/.gitconfig"
 
@@ -22,8 +26,10 @@ grep -F "path = ${GIT_TOOLS_PATH}" "$GIT_CONFIG" 2>/dev/null || sed -i '' -e "s/
 ```
 
 3. Optionally, add the following line to your shell profile (.bashrc, .zshrc, etc):
-```
-	[[ -z "$GIT_TOOLS_PATH" ]] && export GIT_TOOLS_PATH="$(dirname "$(git config --show-origin alias.xtool | sed 's/^file:\\([^      ]*\\).*/\\1/')")"
+```bash
+# ~/.bashrc
+
+[[ -z "$GIT_TOOLS_PATH" ]] && export GIT_TOOLS_PATH="$(dirname "$(git config --show-origin alias.xtool | sed 's/^file:\\([^      ]*\\).*/\\1/')")"
 ```
 
 ## Usage 
@@ -51,7 +57,7 @@ grep -F "path = ${GIT_TOOLS_PATH}" "$GIT_CONFIG" 2>/dev/null || sed -i '' -e "s/
 ### `$> git nearby`
   intended to list all git projects in the parent directory of the current project
 
-### `$> git pluck [branch] [commit|files...]`
+### `$> git-pluck [options] [branch] [commit|files...]`
 
 **THIS IS A WORK IN PROGRESS AND MAY NOT BE FULLY FUNCTIONAL YET**
 
@@ -63,6 +69,12 @@ grep -F "path = ${GIT_TOOLS_PATH}" "$GIT_CONFIG" 2>/dev/null || sed -i '' -e "s/
       - after selecting a commit, specific filestates at that commit can be selected
         to apply only the changes for that specific file
 ```
+
+#### `$> git-pluck --clean <branch>`
+ as above, but with a clean cache.
+
+#### `$> git-pluck --reset`
+ clear the git-pluck cache
 
 ### `$> git purge [filepath(s)]`
 
