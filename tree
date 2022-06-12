@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# USAGE: git tree [--modified]
+#  print the directory tree from the root of the current git context
+#     -m, --modified
+#        only show files that have been modified since the last commit
+cmd=()
+for arg
+do
+	case $arg in
+		-m|--modified)
+			cmd+=("toggle_git_status")
+			;;
+	esac
+done
+cmd+=(pt)
+
+# collate commands, and trim whitespace via xargs
+cmd=$(printf '%s; ' "${cmd[@]}" | xargs echo)
+
+git root >/dev/null && cd "$(git root)" && broot --cmd ":${cmd}"

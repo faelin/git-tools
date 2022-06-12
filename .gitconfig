@@ -1,0 +1,97 @@
+# To use these tools, include this file in your own gitconfig file:
+#
+#   [include]
+#       path = PATH/TO/.git_tools/.gitconfig
+#
+# Optionally, you can also add the following line to your shell profile
+# (.bashrc, .zshrc, etc) to make git-tools slightly more efficient:
+#
+#	[[ -z "$GIT_TOOLS_PATH" ]] && export GIT_TOOLS_PATH="$(dirname "$(git config --show-origin alias.xtool | sed 's/^file:\\([^      ]*\\).*/\\1/')")"
+#
+
+[alias]
+    #
+    # USAGE: git alias <name>
+    #  print the indicated git alias
+    alias = xtool alias
+    #
+    # USAGE: git aliases
+    #  prints all of the aliases listed in the git config
+    aliases = xtool alias --all
+    #
+    # USAGE: git clear-changes
+    #  reset all changes back to the state of HEAD (most recent commit)
+    clear-changes = reset --hard HEAD
+    #
+    # USAGE: git ignore [--global] [path(s)]
+    #  adds the specified path to the local .gitignore file
+    #  if no path is specified, opens .gitignore in the default editor
+    #     --global
+    #       acts on the ~/.gitignore_global file instead
+    ignore = xtool ignore
+    #
+    # USAGE: git graft <soure> [cousin] <new-root>
+    graft = xtool graft
+    #
+    # USAGE: git make-like <ref>
+    #  pulls all files from the indicated ref (commit, branch, etc) into your current working tree
+    #  and merges non-conflicting changes, without overwriting your working tree state
+    make-like = xtool make-like
+    #
+    # USAGE: git nearby
+    #  intended to list all git projects in the parent directory of the current project
+    nearby = xtool nearby
+    #
+    # USAGE: git pluck [branch] [commit|files...]
+    #
+    #  THIS IS A WORK IN PROGRESS AND MAY NOT BE FULLY FUNCTIONAL YET
+    #
+    #  cherry-pick the indicated commit or files from the specified branch and add them to the working tree
+    #     -i,--interactive
+    #        enters an interactive search utility to visualize changes
+    #          - if an entire commit is selected, all changes will be shown in diff format
+    #          - after selecting a commit, specific filestates at that commit can be selected
+    #            to apply only the changes for that specific file
+    pluck = "! git-pluck \"$@\";"
+    #
+    # USAGE: git purge [filepath(s)]
+    #  WARNING: THIS IS VERY DANGEROUS AND CANNOT BE UNDONE!
+    #  remove the indicated file(s) from the working tree and scrub them entirely from the git history
+    #     - all references to the removed files are scrubbed from the repo history
+    #     - any commit which soley references the targeted file(s) is removed from the repo history
+    #     - there is no way to undo this
+    purge = xtool purge
+    #
+    # USAGE: git rollback [commit-ish] [n]
+    #  undo the last (n) commits while preserving the working tree (defaults to undo the most recent commit)
+    rollback = xtool rollback
+    #
+    # USAGE: git root
+    #  prints the root directory 
+    root = rev-parse --show-toplevel
+    #
+    # USAGE: git send ["message"]
+    #  commit all tracked files with the indicated message and push to git
+    send = xtool send
+    #
+    # USAGE: git status-diff [<options>] [<commit>] [--] [<path>…]
+    #  see colorized diff for changes in current working tree
+    status-diff = xtool status-diff
+    #
+    # USAGE: git touch <filename>
+    #  begin tracking the indicated files (creates an empty file if it does not exist)
+    touch = xtool touch
+    #
+    # USAGE: git tree [--modified]
+    #  print the directory tree from the root of the current git context
+    #     -m, --modified
+    #        only show files that have been modified since the last commit
+    tree = xtool tree
+    #
+    # USAGE: git unstage <files>
+    unstage = rm -r --cached --quiet
+    #
+    # USAGE: git xtool [--open|-o] <tool>
+    #  execute the indicated tool, or open the tool file
+    xtool = ! sh \"${GIT_TOOLS_PATH:-$(dirname \"$(git config --show-origin alias.xtool | sed 's/^file:\\([^      ]*\\).*/\\1/')\")}/xtool\"
+    #

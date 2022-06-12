@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# USAGE: git purge [filepath(s)]
+#  WARNING: THIS IS VERY DANGEROUS AND CANNOT BE UNDONE!
+#  remove the indicated file(s) from the working tree and scrub them entirely from the git history
+#     - all references to the removed files are scrubbed from the repo history
+#     - any commit which soley references the targeted file(s) is removed from the repo history
+#     - there is no way to undo this
+
+if [[ "$1" =~ ^(-f|--force)$ ]];
+then
+    shift;
+else
+    printf 'This command is destructive and cannot be undone!\nConfirm action [y/N]: ';
+    read;
+    [[ ! $REPLY =~ ^[Yy](es)?$ ]] && echo "aborted..." && exit 0;
+fi;
+
+if [[ $# -gt 0 ]];
+then
+    git filter-repo --force --invert-paths $(printf -- '--path %s ' $@);
+else
+    rm -rf .git/refs/original/ && git reflog expire --all && git gc --aggressive --prune;
+fi

@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# USAGE: git ignore [--global] [path(s)]
+#  adds the specified path to the local .gitignore file
+#  if no path is specified, opens .gitignore in the default editor
+#     --global
+#       acts on the ~/.gitignore_global file instead
+
+if [[ $1 == '--global' ]];
+then
+    target="$HOME/.gitignore_global" && shift;
+elif git rev-parse 2>/dev/null 1>&2;
+then
+    target="$(git root)/.gitignore";
+elif [[ -f '.gitignore' ]];
+then
+    target='.gitignore';
+else
+    target="$HOME/.gitignore_global";
+fi;
+echo "$target";
+target="$(realpath "$target")";
+
+if [[ $# -eq 0 ]];
+then
+    edit="$(git config --get core.editor)";
+    edit="${edit:-$EDITOR}";
+    edit="${edit:-vim}";
+    $edit $target && return;
+fi;
+
+grep -qxF '# quick-add' "$target" 2>/dev/null || echo '\n\n# quick-add' >> "$target";
+
+set -f -o noglob;
+for arg;
+do
+    grep -qxF "$arg" "$target" && echo '   '"$arg" && continue;
+    echo '+  '"$arg";
+    arg="$(printf '%s\n' "$arg" | sed 's:[][\/.^$*]:\\&:g')";
+    sed -i '' -e 's/^# quick-add$/# quick-add'"\n${arg}/" "$target";
+done;

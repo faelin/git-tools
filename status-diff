@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# USAGE: git status-diff [<options>] [<commit>] [--] [<path>…]
+#  see colorized diff for changes in current working tree
+
+git diff --name-only --diff-filter=d "$@" | xargs bat --diff;

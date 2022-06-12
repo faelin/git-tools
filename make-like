@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# USAGE: git make-like <ref>
+#  pulls all files from the indicated ref (commit, branch, etc) into your current working tree
+#  and attempts to merge in the changes, without overwriting your working tree state
+
+git restore --source="$1" --merge -- \
+  $( git --no-pager diff-index --diff-filter=a --find-copies --find-renames --name-status "$1" | cut -f2 );

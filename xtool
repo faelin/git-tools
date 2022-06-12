@@ -1,0 +1,61 @@
+#!/bin/sh
+
+# USAGE: git xtool [--open|-o] <tool>
+#  execute the indicated tool, or open the tool file
+
+case $1 in
+    -o|--open)
+        _xtool_open=1
+        _xtool_name="$2"
+        shift 2
+        ;;
+    *)
+        _xtool_name="$1"
+        shift
+        ;;
+esac
+
+if (( $_xtool_open )) && [[ -z $_xtool_name ]]
+then
+    # select _xtool_name if not specified
+    _xtool_list=( $(sort -u <<<"$(\ls "$HOME/.git_tools" 2> /dev/null) $(\ls ".git/tools" 2> /dev/null)") )
+    _xtool_name="$(
+        if command -v fzf >/dev/null
+        then
+            printf "%s\n" "${_xtool_list[@]}" | fzf --layout=reverse --height $((${#_xtool_list[@]} + 2))
+        else
+            COLUMNS=12
+            PS3=$'\nWhich tool? '
+            select tool in "${_xtool_list[@]}"
+            do
+                echo "$tool"
+                break
+            done
+        fi
+    )"
+fi
+
+[[ -z $_xtool_name ]] && echo "xtool: argument required" >&2 && exit 1
+
+# get top-level for current git
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [[ -n "$GIT_ROOT" && -f "$GIT_ROOT/.git/tools/$_xtool_name" ]]
+then
+    _xtool_path="$GIT_ROOT/.git/tools/$_xtool_name"
+elif [[ -f "$HOME/.git_tools/$_xtool_name" ]]
+then
+    _xtool_path="$HOME/.git_tools/$_xtool_name"
+else
+    echo "xtool: No such tool: $_xtool_name" >&2
+    exit 1
+fi
+
+
+if (( _xtool_open ))
+then
+    echo "$_xtool_path"
+    $EDITOR "$_xtool_path" "$@"
+else
+    . $_xtool_path "$@"
+fi
+

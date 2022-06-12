@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# USAGE: git nearby
+#  intended to list all git projects in the parent directory of the current project
+
+git rev-parse \
+ && list=($(\find "$(git rev-parse --show-cdup).." -type d  -name '.git' -maxdepth 2)) \
+ && echo ${list[@]%.git}

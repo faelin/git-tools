@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# USAGE: git send ["message"]
+#  commit all tracked files with the indicated message and push to git
+
+git commit -a --allow-empty-message -m "$@";
+[[ -n "$(git remote -v 2>/dev/null)" ]] && git push;

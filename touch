@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# USAGE: git touch <filename>
+#  begin tracking the indicated files (creates an empty file if it does not exist)
+
+for path
+do
+	if [[ $path =~ / ]]
+	then
+		[[ $path =~ ^. ]] || cd "$(git root)"
+		mkdir -p "$(dirname "$path")"
+	fi
+	touch $@;
+	git add $@;
+done
+

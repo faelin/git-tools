@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# USAGE: git alias <name(s)>
+#  print the indicated git alias
+
+[[ $1 =~ ^--all$ ]] && set -- $(git config --get-regexp --name-only '^alias\.' )
+
+for name
+do
+    name="${name#alias.}";
+    body="$(git config --show-origin --get "alias.${name}")"
+    [[ -z "$body" ]] && echo "no such alias: $name" && exit 1
+    
+    body="$(sed -e 's/^file:\([^ ]*\)\t/\1\n/' <<<"$body")"
+    source="$(head -1 <<<"$body")"
+    body="$(tail -n +2 <<<"$body")"
+
+    if [[ "$body" =~ ^'xtool ' ]]
+    then
+        file=$(echo $body | cut -d' ' -f2)
+        bat "$HOME/.git_tools/$file" --file-name="$source -> [alias.$name] -> $HOME/.git_tools/$file"
+    else
+        shfmt <<<"$body" | bat --language=sh --file-name="$source -> [alias.$name]"
+    fi
+done

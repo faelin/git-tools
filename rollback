@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# USAGE: git rollback [commit-ish] [n]
+#  undo the last (n) commits while preserving the working tree (defaults to undo the most recent commit)
+
+[[ "$1" =~ '^[0-9]{1,7}$' ]] && amount="$1" || commit=$1;
+git reset --mixed "${commit:-HEAD}~${amount:-1}";
