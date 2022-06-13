@@ -21,7 +21,7 @@
     #
     # USAGE: git clear-changes
     #  reset all changes back to the state of HEAD (most recent commit)
-    clear-changes = reset --hard HEAD
+    clear-changes = reset --hard HEAD --
     #
     # USAGE: git ignore [--global] [path(s)]
     #  adds the specified path to the local .gitignore file
@@ -89,7 +89,10 @@
     tree = xtool tree
     #
     # USAGE: git unstage <files>
-    unstage = rm -r --cached --quiet
+    unstage = reset HEAD --
+    #
+    # USAGE: git untrack <files>
+    untrack = rm -r --cached --quiet --
     #
     # USAGE: git xtool [--open|-o] <tool>
     #  execute the indicated tool, or open the tool file
