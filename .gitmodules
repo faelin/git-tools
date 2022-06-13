@@ -1,0 +1,3 @@
+[submodule "git_tools_demo"]
+	path = git_tools_demo
+	url = git@github.com:faelin/git_tools_demo.git

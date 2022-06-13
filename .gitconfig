@@ -101,7 +101,9 @@
     # USAGE: git untrack <files>
     untrack = rm -r --cached --quiet --
     #
+    swap = xtool swap
+    #
     # USAGE: git xtool [--open|-o] <tool>
     #  execute the indicated tool, or open the tool file
-    xtool = ! sh \"${GIT_TOOLS_PATH:-$(dirname \"$(git config --show-origin alias.xtool | sed 's/^file:\\([^      ]*\\).*/\\1/')\")}/xtool\"
+    xtool = ! sh \"$(dirname \"$(git config --show-origin alias.xtool | sed 's/^file:\\([^      ]*\\).*/\\1/')\")/xtool\"
     #
