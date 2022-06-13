@@ -30,11 +30,12 @@
     #       acts on the ~/.gitignore_global file instead
     ignore = xtool ignore
     #
-    graph = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all
+    # USAGE: git graph
+    graph = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%n' --all
     #
     # USAGE: git last
     #  show the details of the most recent commit
-    last = log -1 HEAD
+    last = show --abbrev-commit
     #
     # USAGE: git make-like <ref>
     #  pulls all files from the indicated ref (commit, branch, etc) into your current working tree
