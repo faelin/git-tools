@@ -4,10 +4,10 @@
 #   [include]
 #       path = PATH/TO/.git_tools/.gitconfig
 #
-# Optionally, you can also add the following line to your shell profile
+# Then add the following line to your shell profile
 # (.bashrc, .zshrc, etc) to make git-tools slightly more efficient:
 #
-#	[[ -z "$GIT_TOOLS_PATH" ]] && export GIT_TOOLS_PATH="$(dirname ${$(git config --show-origin alias.xtool | cut -f1)#'file:'})"
+#	[[ -z "$GIT_TOOLS_PATH" ]] && export GIT_TOOLS_PATH="$(dirname "$(git config --show-origin alias.xtool | cut -f1 | sed 's/^file://')")"
 #
 
 [alias]
@@ -89,5 +89,5 @@
     #
     # USAGE: git xtool [--open|-o] <tool>
     #  execute the indicated tool, or open the tool file
-    xtool = ! sh \"${GIT_TOOLS_PATH:-$(dirname ${$(git config --show-origin alias.xtool | cut -f1)#'file:'})}/xtool\"
+    xtool = ! sh \"${GIT_TOOLS_PATH:-\"$(dirname \"$(git config --show-origin alias.xtool | cut -f1 | sed 's/^file://')\")\"}/xtool\"
     #

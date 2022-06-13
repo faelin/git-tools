@@ -25,7 +25,7 @@ grep -qx '^\[include\]$' "$GIT_CONFIG" 2>/dev/null || echo '\n[include]' >> "$GI
 grep -F "path = ${GIT_TOOLS_PATH}" "$GIT_CONFIG" 2>/dev/null || sed -i '' -e "s/^[include]$/[include]\n    path = ${GIT_TOOLS_PATH}/" "$GIT_CONFIG";
 ```
 
-3. Optionally, add the following line to your shell profile (.bashrc, .zshrc, etc):
+3. Add the following line to your shell profile (.bashrc, .zshrc, etc):
 ```bash
 # ~/.bashrc
 
