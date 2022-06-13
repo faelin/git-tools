@@ -3,22 +3,29 @@
 # USAGE: git xtool [--open|-o] <tool>
 #  execute the indicated tool, or open the tool file
 
-case $1 in
-    -o|--open)
-        _xtool_open=1
-        _xtool_name="$2"
-        shift 2
-        ;;
-    --help)
-        _xtool_help=1
-        _xtool_name="$2"
-        shift 2
-        ;;
-    *)
-        _xtool_name="$1"
-        shift
-        ;;
-esac
+while (($#))
+do
+    case $1 in
+        --open|-o)
+            _xtool_open=1
+            ;;
+        --help|-h)
+            _xtool_name='help'
+            shift
+            break
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            _xtool_name="$1"
+            shift
+            break
+            ;;
+    esac
+    shift
+done
 
 if (( $_xtool_open )) && [[ -z $_xtool_name ]]
 then
