@@ -6,20 +6,72 @@
 #     --global
 #       acts on the ~/.gitignore_global file instead
 
-if [[ $1 == '--global' ]];
+_git_ignore_items=()
+while (( $# ))
+do
+    case $1 in
+        --ignore-file|-f)
+            shift
+            _git_ignore_file="$1"
+            ;;
+        --global|-g)
+            _git_ignore_context='--global'
+            ;;
+        --local|-l)
+            _git_ignore_context='--local'
+            ;;
+        --set-ignore|--configure|-c)
+            _git_ignore_apply=1
+            ;;
+        --)
+            _git_ignore_items+=($@)
+            break
+            ;;
+        *)
+            _git_ignore_items+=("$1")
+            ;;
+    esac
+    shift
+done
+
+target="${_git_ignore_file:-"$(git config $_git_ignore_context --get core.excludesfile)"}"
+if [[ -z "$target" ]]
 then
-    target="$HOME/.gitignore_global" && shift;
-elif git rev-parse 2>/dev/null 1>&2;
-then
-    target="$(git root)/.gitignore";
-elif [[ -f '.gitignore' ]];
-then
-    target='.gitignore';
-else
-    target="$HOME/.gitignore_global";
-fi;
-echo "$target";
+    if [[ "$_git_ignore_context" == '--global' ]]
+    then
+
+        target="$HOME/.gitignore_global"
+        _git_ignore_apply=1
+
+    elif git rev-parse 2>/dev/null
+    then
+
+        target=".gitignore"
+        _git_ignore_context=${_git_ignore_context:-'--local'}
+        _git_ignore_apply=1
+
+    elif [[ -f '.gitignore' ]]
+    then
+
+        target=".gitignore"
+
+    elif [[ -f '.ignore' ]]
+    then
+
+        target=".ignore"
+
+    else
+
+        target="$HOME/.gitignore_global"
+        _git_ignore_context=${_git_ignore_context:-'--global'}
+        _git_ignore_apply=1
+
+    fi
+fi
+((_git_ignore_apply)) && git config $_git_ignore_context core.excludesfile "$target"
+
 target="$(realpath "$target")";
+echo "$target";
 
 if [[ $# -eq 0 ]];
 then
@@ -37,5 +89,5 @@ do
     grep -qxF "$arg" "$target" && echo '   '"$arg" && continue;
     echo '+  '"$arg";
     arg="$(printf '%s\n' "$arg" | sed 's:[][\/.^$*]:\\&:g')";
-    sed -i '' -e 's/^# quick-add$/# quick-add'"\n${arg}/" "$target";
+    sed -i '' -e "s/^# quick-add$/# quick-add\n${arg}/" "$target";
 done;
