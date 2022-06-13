@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# USAGE: git xtool help <tool>
+#  provides help text and hints for the indicated command
+
+_xtool_name="$1"
+[[ -z $_xtool_name ]] && echo "xtool: help: argument required" >&2 && exit 1
+
+# get top-level for current git
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [[ -n "$GIT_ROOT" && -f "$GIT_ROOT/.git/tools/$_xtool_name.help" ]]
+then
+    _xtool_path="$GIT_ROOT/.git/tools/$_xtool_name.help"
+elif [[ -f "$HOME/.git_tools/$_xtool_name.help" ]]
+then
+    _xtool_path="$HOME/.git_tools/$_xtool_name.help"
+else
+    echo "xtool: No help file for tool: $_xtool_name" >&2
+    exit 1
+fi
+
+bat --language=markdown "$_xtool_path"

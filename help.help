@@ -1,0 +1,3 @@
+# USAGE: git xtool help <tool>
+provides help text and hints for the indicated command
+
