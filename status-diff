@@ -2,5 +2,48 @@
 
 # USAGE: git status-diff [<options>] [<commit>] [--] [<path>…]
 #  see colorized diff for changes in current working tree
+#
+#    -s, --submodule-diff
+#      show diffs for submodule files
+#
+#    -S, --short-submodules
+#      show compact status for submodules
 
-git diff --name-only --diff-filter=d "$@" | xargs bat --diff;
+while (( $# ))
+do
+	case $1 in
+		--submodule-diff|-s)
+			_status_diff_submodules=1
+			shift
+			;;
+		--short-submodules|-S)
+			_status_diff_submodules=2
+			shift
+			;;
+		--)
+			shift
+			break
+			;;
+	esac
+done
+
+for item in $(git diff --name-only --diff-filter=d "$@")
+do
+	if [[ -d "$item" ]]
+	then
+		cd "$item" 
+		if [[ -n "$(git rev-parse --show-superproject-working-tree)" ]]
+		then
+			if ((_status_diff_submodules > 1))
+			then
+				git -c color.status=always status -s | bat --file-name "Submodule –> $item"
+			elif ((_status_diff_submodules))
+			then
+				git diff | bat --language=diff --file-name "Submodule –> $item"
+			fi
+		fi
+		cd - >/dev/null
+	else
+		bat --diff "$item"
+	fi
+done
