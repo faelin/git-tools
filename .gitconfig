@@ -30,8 +30,6 @@
     #       acts on the ~/.gitignore_global file instead
     ignore = xtool ignore
     #
-    # USAGE: git graft <soure> [cousin] <new-root>
-    graft = xtool graft
     #
     # USAGE: git make-like <ref>
     #  pulls all files from the indicated ref (commit, branch, etc) into your current working tree
