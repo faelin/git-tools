@@ -30,6 +30,8 @@
     #       acts on the ~/.gitignore_global file instead
     ignore = xtool ignore
     #
+    graph = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all
+    #
     # USAGE: git last
     #  show the details of the most recent commit
     last = log -1 HEAD
