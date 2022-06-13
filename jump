@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# USAGE: git jump <branch>
+#   quickly stash changes and switch to the indicated branch
+#   - changes are unstash upon switching back
+
+git stash push --message ""
