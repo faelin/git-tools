@@ -23,6 +23,10 @@ do
         --set-ignore|--configure|-c)
             _git_ignore_apply=1
             ;;
+        --help|-h)
+            grep '^# USAGE' 'ignore.help'
+            exit 0;
+            ;;
         --)
             _git_ignore_items+=($@)
             break
