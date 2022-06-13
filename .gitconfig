@@ -1,3 +1,4 @@
+#
 # To use these tools, include this file in your own gitconfig file:
 #
 #   [include]
@@ -6,7 +7,7 @@
 # Optionally, you can also add the following line to your shell profile
 # (.bashrc, .zshrc, etc) to make git-tools slightly more efficient:
 #
-#	[[ -z "$GIT_TOOLS_PATH" ]] && export GIT_TOOLS_PATH="$(dirname "$(git config --show-origin alias.xtool | sed 's/^file:\\([^      ]*\\).*/\\1/')")"
+#	[[ -z "$GIT_TOOLS_PATH" ]] && export GIT_TOOLS_PATH="$(dirname ${$(git config --show-origin alias.xtool | cut -f1)#'file:'})"
 #
 
 [alias]
@@ -105,5 +106,5 @@
     #
     # USAGE: git xtool [--open|-o] <tool>
     #  execute the indicated tool, or open the tool file
-    xtool = ! sh \"$(dirname \"$(git config --show-origin alias.xtool | sed 's/^file:\\([^      ]*\\).*/\\1/')\")/xtool\"
+    xtool = ! sh \"${GIT_TOOLS_PATH:-$(dirname \"$(git config --show-origin alias.xtool | sed 's/^file:\\([^      ]*\\).*/\\1/')\")}/xtool\"
     #
