@@ -30,6 +30,9 @@
     #       acts on the ~/.gitignore_global file instead
     ignore = xtool ignore
     #
+    # USAGE: git last
+    #  show the details of the most recent commit
+    last = log -1 HEAD
     #
     # USAGE: git make-like <ref>
     #  pulls all files from the indicated ref (commit, branch, etc) into your current working tree
