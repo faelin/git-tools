@@ -3,12 +3,12 @@
 # USAGE: git alias <name(s)>
 #  print the indicated git alias
 
-[[ $1 =~ ^--all$ ]] && set -- $(git config --get-regexp --name-only '^alias\.' )
+[[ $1 =~ ^--all$ ]] && set -- $(git config --includes --get-regexp --name-only '^alias\.' )
 
 for name
 do
     name="${name#alias.}";
-    body="$(git config --show-origin --get "alias.${name}")"
+    body="$(git config --includes --show-origin --get "alias.${name}")"
     [[ -z "$body" ]] && echo "no such alias: $name" && exit 1
     
     body="$(sed -e 's/^file:\([^ ]*\)\t/\1\n/' <<<"$body")"
