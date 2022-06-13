@@ -52,7 +52,10 @@
     #          - if an entire commit is selected, all changes will be shown in diff format
     #          - after selecting a commit, specific filestates at that commit can be selected
     #            to apply only the changes for that specific file
-    pluck = "! git-pluck \"$@\";"
+    #
+    #     --clean
+    #       run with a clear cache
+    pluck = xtool pluck
     #
     # USAGE: git purge [filepath(s)]
     #  WARNING: THIS IS VERY DANGEROUS AND CANNOT BE UNDONE!
