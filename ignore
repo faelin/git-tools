@@ -28,6 +28,7 @@ do
             exit 0;
             ;;
         --)
+            shift
             _git_ignore_items+=($@)
             break
             ;;
@@ -74,24 +75,30 @@ then
 fi
 ((_git_ignore_apply)) && git config $_git_ignore_context core.excludesfile "$target"
 
-target="$(realpath "$target")";
-echo "$target";
+target="$(realpath "$target")"
+echo "$target"
 
-if [[ $# -eq 0 ]];
+
+if (( ${#_git_ignore_items[@]} > 0 ));
 then
-    edit="$(git config --get core.editor)";
-    edit="${edit:-$EDITOR}";
-    edit="${edit:-vim}";
-    $edit $target && return;
-fi;
 
-grep -qxF '# quick-add' "$target" 2>/dev/null || echo '\n\n# quick-add' >> "$target";
+    grep -qxF '# quick-add' "$target" 2>/dev/null || echo '\n\n# quick-add' >> "$target"
 
-set -f -o noglob;
-for arg;
-do
-    grep -qxF "$arg" "$target" && echo '   '"$arg" && continue;
-    echo '+  '"$arg";
-    arg="$(printf '%s\n' "$arg" | sed 's:[][\/.^$*]:\\&:g')";
-    sed -i '' -e "s/^# quick-add$/# quick-add\n${arg}/" "$target";
-done;
+    set -f -o noglob;
+    for arg in $_git_ignore_items
+    do
+        grep -qxF "$arg" "$target" && echo '   '"$arg" && continue
+        echo '+  '"$arg"
+        arg="$(printf '%s\n' "$arg" | sed 's:[][\/.^$*]:\\&:g')"
+        sed -i '' -e "s/^# quick-add$/# quick-add\n${arg}/" "$target"
+    done
+
+else
+
+    edit="$(git config --get core.editor)"
+    edit="${edit:-$EDITOR}"
+    edit="${edit:-vim}"
+    $edit $target && return
+
+fi
+
