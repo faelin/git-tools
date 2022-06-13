@@ -87,6 +87,8 @@
     # USAGE: git untrack <files>
     untrack = rm -r --cached --quiet --
     #
+    jump = xtool jump
+    #
     # USAGE: git xtool [--open|-o] <tool>
     #  execute the indicated tool, or open the tool file
     xtool = ! sh \"${GIT_TOOLS_PATH:-$(dirname ${$(git config --show-origin alias.xtool | cut -f1)#'file:'})}/xtool\"
