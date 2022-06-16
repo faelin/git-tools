@@ -1,0 +1,6 @@
+.git.*
+git_tools_demo
+.xtool_ignore
+README.*
+LICENSE
+TODO

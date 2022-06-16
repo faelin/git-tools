@@ -1,0 +1,10 @@
+1. clear-changes
+    - enable pathspec
+2. make-like
+    - test this
+3. purge
+    - safety checks
+4. tree
+    - dependency fallbacks
+5. aliases
+    - use xtool.select_tool()
