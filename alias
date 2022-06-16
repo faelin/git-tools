@@ -39,11 +39,26 @@ do
     source="$(head -1 <<<"$body")"
     body="$(tail -n +2 <<<"$body")"
 
+    name_string="$source -> [alias.$name]"
+
     if [[ "$body" =~ ^'xtool ' ]]
     then
-        file=$(echo $body | cut -d' ' -f2)
-        bat "$HOME/.git_tools/$file" --file-name="$source -> [alias.$name] -> $HOME/.git_tools/$file"
+        target="$(echo $body | cut -d' ' -f 2)"
+        alias_args="$(echo $body | cut -d' ' -f 3-)"
+        file="$($GIT_TOOLS_PATH/xtool --path $target)"
+        body="$(\cat "$file")"
+
+        name_string+=" -> $file $alias_args"
     else
-        shfmt <<<"$body" | bat --language=sh --file-name="$source -> [alias.$name]"
+        command -v shfmt >/dev/null && body="$(shfmt <<<"$body")"
+        bat_args+=( '--language=sh' )
+    fi
+
+    if command -v bat >/dev/null && ! ((_xtool_alias_no_deps))
+    then
+        bat_args+=( "--file-name=$name_string" )
+        ((_xtool_alias_print)) && bat_args+=('--paging=never')
+
+        bat "${bat_args[@]}" <<<"$body"
     fi
 done
