@@ -5,6 +5,53 @@
 
 git rev-parse 2>/dev/null && GIT_TOOLS_LOCAL="$(git rev-parse --show-toplevel 2>/dev/null)/.git/tools"
 
+###
+
+function xtool_list() {
+    local _xtool_list=()
+
+    [[ -d "$GIT_TOOLS_LOCAL" ]] && _xtool_list+=( $(\ls "$GIT_TOOLS_LOCAL" 2> /dev/null | grep -v -f "$GIT_TOOLS_LOCAL/.xtool_ignore") )
+    _xtool_list+=( $(\ls "$GIT_TOOLS_PATH" 2> /dev/null | grep -v -f "$GIT_TOOLS_PATH/.xtool_ignore") )
+    
+    _xtool_list=( $(echo "${_xtool_list[@]}" | sort -u) )
+    printf '%s\n' "${_xtool_list[@]}"
+    return 0
+}
+function xtool_select() {
+    # select _xtool_name if not specified
+    local _xtool_list=( $(xtool_list) )
+
+    if command -v fzf >/dev/null
+    then
+        printf "%s\n" "${_xtool_list[@]}" | fzf --layout=reverse --height $((${#_xtool_list[@]} + 2)) | cut -f1
+    else
+        COLUMNS=12
+        PS3=$'\nWhich tool? '
+        select tool in "${_xtool_list[@]}"
+        do
+            echo "$tool" | cut -f1
+            return 0
+        done
+    fi
+}
+function xtool_get_path() {
+    local _xtool_name=$1
+
+    if [[ -f "$GIT_TOOLS_LOCAL/$_xtool_name" ]]
+    then
+        echo "$GIT_TOOLS_LOCAL/$_xtool_name"
+        return 0
+    elif [[ -f "$GIT_TOOLS_PATH/$_xtool_name" ]]
+    then
+        echo "$GIT_TOOLS_PATH/$_xtool_name"
+        return 0
+    else
+        return 1
+    fi
+}
+
+###
+
 while (($#))
 do
     case $1 in
@@ -42,42 +89,15 @@ do
     shift
 done
 
-if (( $_xtool_open )) && [[ -z $_xtool_name ]]
-then
-    # select _xtool_name if not specified
-    _xtool_list=( $(sort -u <<<"$(\ls "$HOME/.git_tools" 2> /dev/null) $(\ls ".git/tools" 2> /dev/null)") )
-    _xtool_name="$(
-        if command -v fzf >/dev/null
-        then
-            printf "%s\n" "${_xtool_list[@]}" | fzf --layout=reverse --height $((${#_xtool_list[@]} + 2))
-        else
-            COLUMNS=12
-            PS3=$'\nWhich tool? '
-            select tool in "${_xtool_list[@]}"
-            do
-                echo "$tool"
-                break
-            done
-        fi
-    )"
-fi
-
+# select _xtool_name if not specified
+[[ -z $_xtool_name ]] && _xtool_name="$(xtool_select)"
 [[ -z $_xtool_name ]] && echo "xtool: argument required" >&2 && exit 1
 
 # get top-level for current git
-GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
-if [[ -n "$GIT_ROOT" && -f "$GIT_ROOT/.git/tools/$_xtool_name" ]]
-then
-    _xtool_path="$GIT_ROOT/.git/tools/$_xtool_name"
-elif [[ -f "$HOME/.git_tools/$_xtool_name" ]]
-then
-    _xtool_path="$HOME/.git_tools/$_xtool_name"
-else
-    echo "xtool: No such tool: $_xtool_name" >&2
-    exit 1
-fi
+_xtool_path="$(xtool_get_path "$_xtool_name")"
+[[ -z $_xtool_path ]] && echo "xtool: No such tool: $_xtool_name" >&2 && exit 1
 
-
+# open or run the xtool
 if (( _xtool_open ))
 then
     echo "$_xtool_path"
