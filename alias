@@ -3,9 +3,33 @@
 # USAGE: git alias <name(s)>
 #  print the indicated git alias
 
-[[ $1 =~ ^--all$ ]] && set -- $(git config --includes --get-regexp --name-only '^alias\.' )
 
-for name
+while (( $# ))
+do
+    case $1 in
+        --all|-a)
+            _xtool_alias_print=1
+            items+=( $(git config --includes --get-regexp --name-only '^alias\.' ) )
+            ;;
+        --no-deps)
+            _xtool_alias_no_deps=1
+            ;;
+        --print|-p)
+            _xtool_alias_print=1
+            ;;
+        --)
+            shift
+            items+=( "$@" )
+            break
+            ;;
+        *)
+            items+=( "$1" )
+            ;;
+    esac
+    shift
+done
+
+for name in "${items[@]}"
 do
     name="${name#alias.}";
     body="$(git config --includes --show-origin --get "alias.${name}")"
