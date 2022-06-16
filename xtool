@@ -3,16 +3,31 @@
 # USAGE: git xtool [--open|-o] <tool>
 #  execute the indicated tool, or open the tool file
 
+git rev-parse 2>/dev/null && GIT_TOOLS_LOCAL="$(git rev-parse --show-toplevel 2>/dev/null)/.git/tools"
+
 while (($#))
 do
     case $1 in
-        --open|-o)
-            _xtool_open=1
-            ;;
         --help|-h)
             _xtool_name='help'
             shift
             break
+            ;;
+        --open|-o)
+            _xtool_open=1
+            ;;
+        --list|-l)
+            xtool_list
+            exit $?
+            ;;
+        --path)
+            shift
+            xtool_get_path $@
+            exit $?
+            ;;
+        --select)
+            xtool_select
+            exit $?
             ;;
         --)
             shift
