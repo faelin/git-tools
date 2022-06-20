@@ -80,6 +80,10 @@ do
             shift
             break
             ;;
+        --*)
+            echo "xtool: invalid argument: $1" >&2
+            exit 1
+            ;;
         *)
             _xtool_name="$1"
             shift
