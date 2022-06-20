@@ -36,14 +36,14 @@ do
 		then
 			if ((_status_diff_submodules > 1))
 			then
-				git -c color.status=always status -s | bat --file-name "Submodule –> $item"
+				git -c color.status=always status -s | bat --file-name "Submodule –> $item" --paging=never
 			elif ((_status_diff_submodules))
 			then
-				git diff | bat --language=diff --file-name "Submodule –> $item"
+				git diff | bat --language=diff --file-name "Submodule –> $item" --paging=never
 			fi
 		fi
 		cd - >/dev/null
 	else
-		bat --diff "$item"
+		bat --diff "$item" --paging=never
 	fi
 done
