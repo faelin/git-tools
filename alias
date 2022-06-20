@@ -3,40 +3,6 @@
 # USAGE: git alias <name(s)>
 #  print the indicated git alias
 
-# helper color codes
-C_BOLD="$(tput bold)"
-C_NORM="$(tput sgr0)"
-C_GREY="$(tput setaf 238)"
-
-# magic numbers
-num_width=10
-num_indent=4
-pane_width=$(( $(tput cols) - 2 ))
-wrap_width=$(( $(tput cols) - $num_width ))
-full_width=$(( $pane_width + $num_width ))
-
-function wrapper() {
-    local IFS=$'\n'
-    read -d '' -r -a lines
-
-    local linum=0
-    local prefix="$(printf "${C_GREY}%${num_width}s↪${C_NORM} "  '│')"
-
-    for i in "${!lines[@]}"
-    do
-        line="${lines[$i]}"
-
-        printf "${C_GREY}%${num_indent}s   %s${C_NORM}  %s\n"    $(( $i + 1 ))  '│'  "${line:0:$wrap_width}"
-        line="${line:$wrap_width}"
-
-        while [[ -n $line ]]
-        do
-            printf "${C_GREY}%${num_width}s↪${C_NORM} %s\n"   '│'  "$line"
-            line="${line:$wrap_width}"
-        done
-    done
-}
-
 while (( $# ))
 do
     case $1 in
@@ -49,6 +15,10 @@ do
             ;;
         --print|-p)
             _xtool_alias_print=1
+            ;;
+        --pager)
+            shift
+            _xtool_pager="$1"
             ;;
         --)
             shift
@@ -87,22 +57,15 @@ do
         bat_args+=( '--language=sh' )
     fi
 
-    if command -v bat >/dev/null && ! ((_xtool_alias_no_deps))
+    if ((_xtool_alias_no_deps)) || ! command -v bat >/dev/null
     then
+        reader="$( ((_xtool_alias_print)) && echo 'cat' || echo "${_xtool_pager:-'less'}" )"
+        formatter="$($GIT_TOOLS_PATH/xtool --path 'format_page')"
+        "$formatter" "$name_string" <<<"$body" | $reader
+    else
         bat_args+=( "--file-name=$name_string" )
         ((_xtool_alias_print)) && bat_args+=('--paging=never')
 
         bat "${bat_args[@]}" <<<"$body"
-    else
-        reader="$( ((_xtool_alias_print)) && echo 'cat' || echo 'less' )"
-
-        output=()
-        output+=( "$(  printf "${C_GREY}%${num_width}s%${pane_width}s\n"   '┬'  "${C_NORM}"  |  tr   ' '   '─'                      )" )
-        output+=( "$(  printf "${C_GREY}%${num_width}s%s\n"                '│'  "${C_NORM} Source: ${C_BOLD}$name_string${C_NORM}"  )" )
-        output+=( "$(  printf "${C_GREY}%${num_width}s%${pane_width}s\n"   '┼'  "${C_NORM}"  |  tr   ' '   '─'                      )" )
-        output+=( "$(  \cat <<<"$body" | sed 's/^$/ /g' | wrapper   )" )
-        output+=( "$(  printf "${C_GREY}%${num_width}s%${pane_width}s\n"   "┴"  "${C_NORM}"  |  tr   ' '   '─'                      )" )
-
-        printf "%s\n%s\n%s\n%s\n%s" "${output[@]}" | $reader
     fi
 done

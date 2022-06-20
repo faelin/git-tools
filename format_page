@@ -1,0 +1,91 @@
+#!/bin/sh
+
+# USAGE: prettyprint <name>
+#  reads lines from stdin and wraps them into a nice human-readable page design
+
+
+function utf8_pad() {
+    local bytes=$(wc -c <<<"$1")
+    local chars=$(wc -m <<<"$1")
+    echo $(( $_pad_full + $bytes - $chars ))
+}
+
+
+# delimiter symbols
+_wrap_indicator='↪'
+_pre_top='┬'
+_pre_int='┼'
+_pre_mid='│'
+_pre_bot='┴'
+_pre_wrap="$_wrap_indicator$_pre_mid"
+
+# magic numbers
+_pad_num=4   # padding for line numbers (must be greater than 0)
+_pad_pre=2   # padding for text pane delimiters (must be greater than 0)
+_pad_full=$(( $_pad_num + $_pad_pre ))
+
+_pad_top=$(utf8_pad "$_pre_top")
+_pad_mid=$(utf8_pad "$_pre_mid")
+_pad_int=$(utf8_pad "$_pre_int")
+_pad_bot=$(utf8_pad "$_pre_bot")
+_pad_wrap=$(utf8_pad "$_pre_wrap")
+
+_term_width=$(tput cols)
+_wrap_width=$(( $_term_width - $_pad_full ))
+
+# helper color codes
+C_BOLD="$(tput bold)"
+C_NORM="$(tput sgr0)"
+C_GREY="$(tput setaf 238)"
+
+
+function print_div() {
+    [[ "$1" =~ ^top|int|bot$ ]] || return 1
+
+    local pad="${(p)_pad_$1}"   div="$( eval "echo \$_pre_$1")"
+
+    printf "%s%${pad}s%$(( $_term_width - $_pad_full ))s\n"   "${C_GREY}" "${div}"  |  tr   ' '   '─'
+}
+function print_val() {
+    [[ "$1" =~ ^mid|wrap$ ]] || return 1
+    local div="$1"  val="$2"  num="$3"
+
+    pad="_pad_$div"
+    div="_pre_$div"
+    if [[ "$0" == 'zsh' ]]
+    then
+        local pad="${(p)pad}"  div="${(p)div}"
+    elif [[ "$0" =~ ^bash|sh$ ]]
+    then
+        local pad="${!pad}"  div="${!div}"
+    fi
+
+    printf "%s%${_pad_num}s%$(( $pad - $_pad_num ))s%s\n"    "${C_GREY}" "$num" "$del" "${C_NORM}$val"
+}
+
+echo $0
+exit
+
+
+print_div 'top'
+print_val 'mid' " Source: ${C_BOLD}$1"
+print_div 'int'
+
+IFS=$'\n'
+while read line
+do
+    line="  $line"
+    print_val 'mid' "${line:0:$_wrap_width}" "$(( ++i ))"
+
+    line="${line:$_wrap_width}"
+    while [[ -n $line ]]
+    do
+        print_val 'wrap' "$line" 
+        line="${line:$_wrap_width}"
+    done
+done
+unset IFS
+
+print_div 'bot'
+
+
