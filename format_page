@@ -13,23 +13,23 @@ function utf8_pad() {
 
 # delimiter symbols
 _wrap_indicator='↪'
-_pre_top='┬'
-_pre_int='┼'
-_pre_mid='│'
-_pre_bot='┴'
-_pre_wrap="$_wrap_indicator$_pre_mid"
-_div='─'
+_delim_top='┬'
+_delim_int='┼'
+_delim_mid='│'
+_delim_bot='┴'
+_delim_wrap="$_wrap_indicator$_delim_mid"
+_div_hrz='─'
 
 # magic numbers
 _pad_num=4   # padding for line numbers (must be greater than 0)
-_pad_pre=2   # padding for text pane delimiters (must be greater than 0)
-_pad_full=$(( $_pad_num + $_pad_pre ))
+_pad_delim=2   # padding for text pane delimiters (must be greater than 0)
+_pad_full=$(( $_pad_num + $_pad_delim ))
 
-_pad_top=$(utf8_pad "$_pre_top")
-_pad_mid=$(utf8_pad "$_pre_mid")
-_pad_int=$(utf8_pad "$_pre_int")
-_pad_bot=$(utf8_pad "$_pre_bot")
-_pad_wrap=$(utf8_pad "$_pre_wrap")
+_pad_top=$(utf8_pad "$_delim_top")
+_pad_mid=$(utf8_pad "$_delim_mid")
+_pad_int=$(utf8_pad "$_delim_int")
+_pad_bot=$(utf8_pad "$_delim_bot")
+_pad_wrap=$(utf8_pad "$_delim_wrap")
 
 _term_width=$(tput cols)
 _wrap_width=$(( $_term_width - $_pad_full ))
@@ -39,61 +39,42 @@ C_BOLD="$(tput bold)"
 C_NORM="$(tput sgr0)"
 C_GREY="$(tput setaf 238)"
 
-_shell_type="$(ps -o command= $$ | cut -f1 -d' ')"
-
 
 function format_it() {
-    print_div 'top'
-    print_val 'mid' " Source: ${C_BOLD}${_xtool_format_page_source:-$0}"
-    print_div 'int'
+    print_div "$_pad_top" "$_delim_top"
+    print_val "$_pad_mid" "$_delim_mid" " Source: ${C_BOLD}${_xtool_format_page_source:-$0}"
+    print_div "$_pad_int" "$_delim_int"
 
     local IFS=$'\n'
     while read line
     do
         line="  $line"
-        print_val 'mid' "${line:0:$_wrap_width}" "$(( ++i ))"
+        print_val "$_pad_mid" "$_delim_mid" "${line:0:$_wrap_width}" "$(( ++i ))"
 
         line="${line:$_wrap_width}"
         while [[ -n $line ]]
         do
-            print_val 'wrap' "$line" 
+            print_val "$_pad_wrap" "$_delim_wrap" "$line" 
             line="${line:$_wrap_width}"
         done
     done
 
-    print_div 'bot'
+    print_div "$_pad_bot" "$_delim_bot"
 }
 
 function print_div() {
-    local type="$1"
-    _get_pad "$type"
+    local pad="$1" div="$2"
+
     printf "${C_GREY}"
-    for (( i=1; i<=( $pad - 3 ); i++ )); do printf "${_div}"; done
+    for (( i=1; i<=( $pad - 3 ); i++ )); do printf "${_div_hrz}"; done
     printf "$div"
-    for (( i=1; i<=( $_term_width - $_pad_full ); i++ )); do printf "${_div}"; done
+    for (( i=1; i<=( $_term_width - $_pad_full ); i++ )); do printf "${_div_hrz}"; done
     printf "\n"
 }
 function print_val() {
-    local type="$1" val="$2"  num="$3"
-    _get_pad "$type"
-    printf "%s%${_pad_num}s%$(( $pad - $_pad_num ))s%s\n"    "${C_GREY}" "$num" "$div" "${C_NORM}$val"
-}
-function _get_pad() {
-    [[ "$1" =~ ^top|int|bot|mid|wrap$ ]] || exit 1
+    local pad="$1" div="$2" val="$3" num="$4"
 
-    local _get_pad="_pad_$1"  _get_div="_pre_$1"
-    if [[ "$_shell_type" =~ (^|/|-)zsh$ ]]
-    then
-        pad="${(p)_get_pad}"
-        div="${(p)_get_div}"
-    elif [[ "$_shell_type" =~ /(ba)?sh$ ]]
-    then
-        pad="${!_get_pad}"
-        div="${!_get_div}"
-    else
-        pad="$( eval "echo \$_pad_$1")"
-        div="$( eval "echo \$_pre_$1")"
-    fi
+    printf "${C_GREY}%${_pad_num}s%$(( $pad - $_pad_num ))s${C_NORM}%s\n"    "$num" "$div" "$val"
 }
 
 
