@@ -63,9 +63,10 @@ do
 
     if ((_xtool_alias_no_deps)) || ! command -v bat >/dev/null
     then
-        reader="$( ((_xtool_alias_print)) && echo 'cat' || echo "${_xtool_pager:-'less'}" )"
+        pager="${_xtool_pager:-'less'}"
+        ((_xtool_alias_print)) && pager='cat'
         formatter="$($GIT_TOOLS_PATH/xtool --path 'format_page')"
-        "$formatter" --source "$name_string" <<<"$body" | $reader
+        "$formatter" --source "$name_string" <<<"$body" | $pager
     else
         bat_args+=( "--file-name=$name_string" )
         ((_xtool_alias_print)) && bat_args+=('--paging=never')
