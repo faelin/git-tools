@@ -18,6 +18,7 @@ _pre_int='┼'
 _pre_mid='│'
 _pre_bot='┴'
 _pre_wrap="$_wrap_indicator$_pre_mid"
+_div='─'
 
 # magic numbers
 _pad_num=4   # padding for line numbers (must be greater than 0)
@@ -38,54 +39,83 @@ C_BOLD="$(tput bold)"
 C_NORM="$(tput sgr0)"
 C_GREY="$(tput setaf 238)"
 
+_shell_type="$(ps -o command= $$ | cut -f1 -d' ')"
+
+
+function format_it() {
+    print_div 'top'
+    print_val 'mid' " Source: ${C_BOLD}${_xtool_format_page_source:-$0}"
+    print_div 'int'
+
+    local IFS=$'\n'
+    while read line
+    do
+        line="  $line"
+        print_val 'mid' "${line:0:$_wrap_width}" "$(( ++i ))"
+
+        line="${line:$_wrap_width}"
+        while [[ -n $line ]]
+        do
+            print_val 'wrap' "$line" 
+            line="${line:$_wrap_width}"
+        done
+    done
+
+    print_div 'bot'
+}
 
 function print_div() {
-    [[ "$1" =~ ^top|int|bot$ ]] || return 1
-
-    local pad="${(p)_pad_$1}"   div="$( eval "echo \$_pre_$1")"
-
-    printf "%s%${pad}s%$(( $_term_width - $_pad_full ))s\n"   "${C_GREY}" "${div}"  |  tr   ' '   '─'
+    local type="$1"
+    _get_pad "$type"
+    printf "${C_GREY}"
+    for (( i=1; i<=( $pad - 3 ); i++ )); do printf "${_div}"; done
+    printf "$div"
+    for (( i=1; i<=( $_term_width - $_pad_full ); i++ )); do printf "${_div}"; done
+    printf "\n"
 }
 function print_val() {
-    [[ "$1" =~ ^mid|wrap$ ]] || return 1
-    local div="$1"  val="$2"  num="$3"
+    local type="$1" val="$2"  num="$3"
+    _get_pad "$type"
+    printf "%s%${_pad_num}s%$(( $pad - $_pad_num ))s%s\n"    "${C_GREY}" "$num" "$div" "${C_NORM}$val"
+}
+function _get_pad() {
+    [[ "$1" =~ ^top|int|bot|mid|wrap$ ]] || exit 1
 
-    pad="_pad_$div"
-    div="_pre_$div"
-    if [[ "$0" == 'zsh' ]]
+    local _get_pad="_pad_$1"  _get_div="_pre_$1"
+    if [[ "$_shell_type" =~ (^|/|-)zsh$ ]]
     then
-        local pad="${(p)pad}"  div="${(p)div}"
-    elif [[ "$0" =~ ^bash|sh$ ]]
+        pad="${(p)_get_pad}"
+        div="${(p)_get_div}"
+    elif [[ "$_shell_type" =~ /(ba)?sh$ ]]
     then
-        local pad="${!pad}"  div="${!div}"
+        pad="${!_get_pad}"
+        div="${!_get_div}"
+    else
+        pad="$( eval "echo \$_pad_$1")"
+        div="$( eval "echo \$_pre_$1")"
     fi
-
-    printf "%s%${_pad_num}s%$(( $pad - $_pad_num ))s%s\n"    "${C_GREY}" "$num" "$del" "${C_NORM}$val"
 }
 
-echo $0
-exit
 
-
-print_div 'top'
-print_val 'mid' " Source: ${C_BOLD}$1"
-print_div 'int'
-
-IFS=$'\n'
-while read line
+while (($#))
 do
-    line="  $line"
-    print_val 'mid' "${line:0:$_wrap_width}" "$(( ++i ))"
+    case $1 in
+        --source)
+            shift
+            _xtool_format_page_source="$1"
+            ;;
+        --)
+            shift
+            break
+            ;;
+        --*)
+            echo "error: invalid argument: $1" >&2
+            exit 1
+            ;;
+    esac
 
-    line="${line:$_wrap_width}"
-    while [[ -n $line ]]
-    do
-        print_val 'wrap' "$line" 
-        line="${line:$_wrap_width}"
-    done
+    shift
 done
-unset IFS
 
-print_div 'bot'
-
+format_it
 
