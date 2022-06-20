@@ -25,6 +25,10 @@ do
             items+=( "$@" )
             break
             ;;
+        --*)
+            echo "error: invalid argument: $1" >&2
+            exit 1
+            ;;
         *)
             items+=( "$1" )
             ;;
