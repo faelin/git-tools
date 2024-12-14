@@ -26,7 +26,7 @@ whisper() {
     if [[ "$1" == '-n' ]]
     then
         shift
-        ((quiet)) || printf "$@"
+        ((quiet)) || printf "${@}"
     else
         message="$1\n"
         shift
@@ -41,10 +41,6 @@ throw() {
     for opt in "$@"
     do
       case "$opt" in
-        n)  # negate the quiet
-            yell=1
-            shift
-            ;;
         -[1-9]|-[1-9][1-9])  # exit code
             code="${opt#-}"
             shift
@@ -59,12 +55,7 @@ throw() {
       esac
     done
 
-    if ((yell)) # negate the quiet
-    then
-        echo "${args[@]}" >&2
-    else
-        whisper "${args[@]}" >&2
-    fi
+    echo "${args[@]}" >&2
 
     exit ${code:+1}
 }
@@ -85,16 +76,20 @@ create_log_folder() {
     log_folder="$(escape_filename "$1")"
     [[ -z $log_folder ]] && log_folder="$(escape_filename $current_branch)_log"
     
-    if ((force > 2))
+    if [[ -d $log_folder && -n "$(ls -A $log_folder)" ]]
     then
-        rm -f $log_folder/*
-    elif ((force))
-    then
-        rm -I $log_folder/*
-    else
-        [[ -d $log_folder && -n "$(ls -A $log_folder)" ]] && throw -3 "ERROR: cannot overwrite commit-log folder '$log_folder'!"
+        if ((force > 2))
+        then
+            rm -f $log_folder/*
+        elif ((force))
+        then
+            echo "Commit-log folder '$log_folder' already exists."
+            rm -I $log_folder/*
+        else
+            throw -3 "ERROR: folder '$log_folder' already exists!"
+        fi
     fi
-    
+
     mkdir -p "$log_folder"
     (($?)) && throw -3 "ERROR: Could not create commit-log folder '$log_folder'!"
 }
@@ -144,28 +139,49 @@ identify_merge_commits() {
     
     if ! ((verbose))
     then
-        prefix=1
+        not_verbose=1
     fi 
 
     for ((i = 0; i < $total_commits; i++))
     do
+        ((verbose)) && ((total_commits < 100)) && sleep 0.2 || sleep 0.2
+
         commit="${commits[$i]}"
         IFS=' ' read -r -a commit_info <<< "$commit"
         commit_hash=${commit_info[0]}
         commit_parents=("${commit_info[@]:1}")
 
+        message="${not_verbose:+$EL\r}Processing: [%${padding_length}d/%d]${verbose:+ $commit_hash}"
+        message_args=( "$((i + 1))" "$total_commits" )
+        
         # Check if the commit has more than one parent (i.e., it's a merge commit)
         if [[ ${#commit_parents[@]} -gt 1 ]]
         then
-            merge_commits+=("$commit")
+
+            merge_commits+=("$commit_hash")
+
+            if ((verbose))
+            then
+                message+=" [PR]"
+            else
+                message+=" [found %d merge commits]"
+                message_args+=( "${#merge_commits[@]}" )
+            fi
+
+        elif ((not_verbose))
+        then
+
+            message+=" [found %d merge commits]"
+            message_args+=( "${#merge_commits[@]}" )
+
         fi
 
-        ((verbose)) && sleep 0.1
-        whisper "${prefix:+ -n $EL\r}""Processing: %${padding_length}d/%d [found %d merge commits]" "$((i + 1))" "$total_commits" "${#merge_commits[@]}"
+        whisper ${not_verbose:+-n} "$message" "${message_args[@]}"
+
     done
 
     ((verbose)) && sleep 0.5
-    whisper "${prefix:+${EL}${CPL}${EL}\rIdentifying PR commits... }""Total pull-requests: %d" "${#merge_commits[@]}"
+    ((verbose)) && whisper "Total pull-requests: %d" "${#merge_commits[@]}"
 }
 
 
@@ -181,12 +197,12 @@ generate_commit_summary() {
     echo ""
     echo "${is_merge:+\nPull Request}"
 
-    # first check if commit has parents
+    # first check if commit has any parents
     if [[ $(git rev-list --parents -n 1 "$commit_hash" | wc -w) -gt 1 ]]
     then
         # if this is a PR merge, then we want to compare the two branches
         #     for plain commits, we just want the normal diff
-        if [[ -n $is_merge ]]
+        if ((is_merge))
         then
             git log --pretty=oneline "$commit_hash~1..$commit_hash"
         else
@@ -225,22 +241,22 @@ create_log_files() {
         
         sanitized_message=$(escape_filename "$commit_subject")
         filename="${log_folder}/${commit_timestamp}_${is_merge:+[PR]_}${sanitized_message}.txt"
-        
+
         if [[ " ${merge_commits[*]} " == *" $commit_hash "* ]]
         then
-            is_merge='[PR] '
+            is_merge=1
         else
-            is_merge=''
+            unset is_merge
         fi
 
         ((verbose)) && sleep 0.1
-        whisper "Working on [%${padding_length}d/%d] %s -- %s\"%s\"" "$((i + 1))" "$total_commits" "$commit_hash" "$is_merge" "$commit_subject"
+        whisper "Working on [%${padding_length}d/%d] %s -- %s%s" "$((i + 1))" "$total_commits" "$commit_hash" "${is_merge:+[PR] }" "$commit_subject"
 
         generate_commit_summary "$commit_hash" "$commit_message" "$is_merge" > $filename
         (($?)) && throw -5 "ERROR: Cannot write log-file '$filename'!"
 
     done
-    echo
+    whisper 'Done.'
 }
 
 
@@ -303,8 +319,9 @@ main() {
 
     if ((verbose))
     then
+        whisper
         cd "$log_folder"
-        whisper "  Processed %d, including %d PR merges." "${#commits[@]}" "${#merge_commits[@]}"
+        whisper "  Processed %d commits, including %d PR merges." "${#commits[@]}" "${#merge_commits[@]}"
         whisper "  Total number of lines across all log files: %d" $(wc -l * | tail -1 | xargs | cut -d' ' -f1)
         whisper "  Total number of bytes in files: %d" $(wc -c * | tail -1 | xargs | cut -d' ' -f1)
         whisper
@@ -312,9 +329,12 @@ main() {
         whisper "  ----\t----------"
         ((quiet)) || \du -Ach * | sed 's/^/  /'
         whisper
+    elif ((quiet))
+    then
+        printf "commits\tmerges\n%5d\t%4d\n" "${#commits[@]}" "${#merge_commits[@]}"
+    else
+        printf "\n  Processed %d commits, including %d PR merges.\n\n" "${#commits[@]}" "${#merge_commits[@]}"
     fi
-
-    whisper "Done."
 }
 
 main "$@"
