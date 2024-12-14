@@ -238,9 +238,6 @@ create_log_files() {
         commit_message=$(git log --format=%B -n 1 "$commit_hash" | head -n 1)
         commit_subject=$(git log --format=%s -n 1 "$commit_hash" | cut -c1-${max_subject_length})
         commit_timestamp=$(git log --format=%cd --date=format:"%Y%m%dT%H%M%S" -n 1 "$commit_hash")
-        
-        sanitized_message=$(escape_filename "$commit_subject")
-        filename="${log_folder}/${commit_timestamp}_${is_merge:+[PR]_}${sanitized_message}.txt"
 
         if [[ " ${merge_commits[*]} " == *" $commit_hash "* ]]
         then
@@ -248,6 +245,9 @@ create_log_files() {
         else
             unset is_merge
         fi
+        
+        sanitized_message=$(escape_filename "$commit_subject")
+        filename="${log_folder}/${commit_timestamp}_${is_merge:+[PR]_}${sanitized_message}.txt"
 
         ((verbose)) && sleep 0.1
         whisper "Working on [%${padding_length}d/%d] %s -- %s%s" "$((i + 1))" "$total_commits" "$commit_hash" "${is_merge:+[PR] }" "$commit_subject"
