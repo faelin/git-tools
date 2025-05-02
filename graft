@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# USAGE: git graft <source> [--cousin] <destination-commit>
+
+echo "This alias is still in development" && exit
+
+# source="$1"
+# cousin="$2"
+# [[ -n "$3" ]] && target="$3" || target="$2"
+
+# base="$(git merge-base $source $cousin)"
